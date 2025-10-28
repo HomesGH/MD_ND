@@ -1,5 +1,10 @@
 ## MD_ND
 
+![Build](https://github.com/HomesGH/MD_ND/actions/workflows/build-test.yml/badge.svg)
+![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)
+![C++26](https://img.shields.io/badge/C%2B%2B-26-blue.svg)
+![Optimization](https://img.shields.io/badge/Optimization-O3-success.svg)
+
 Simple molecular dynamics (MD) program to run simulations with the classical Lennard-Jones (LJ) potential in any number of dimensions.
 
 Derivatives of the Helmholtz energy (according to Lustig) are sampled during the simulation as well as the radial pair distribution function (RDF). Additionally, the chemical potential is calculated using Widom's insertion method.
