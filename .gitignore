@@ -1,0 +1,6 @@
+.vscode
+
+*.dat
+trajectory*.vis
+
+MD_ND
