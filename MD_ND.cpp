@@ -169,9 +169,9 @@ constexpr unsigned long long factorial(int n) {
 }
 
 // Generates a random number between 0.0 and 1.0
-std::mt19937 rng;
+std::vector<std::mt19937> rng_threads;  // Each thread uses its own RNG to prevent race conditions
 double random_num(std::mt19937 &rng) {
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    static thread_local std::uniform_real_distribution<double> dist(0.0, 1.0);
     return dist(rng);
 }
 
@@ -224,7 +224,7 @@ void cell_list_build() {
 }
 
 // Calculate the gamma function of nDims/2
-double gamma_factor() {
+constexpr double gamma_factor() {
     double gamma;
     if (nDims % 2 == 0) {
         gamma = factorial((nDims / 2) - 1);
@@ -391,7 +391,7 @@ void calcChemicalPotential() {
 
 #pragma omp parallel default (none) \
     shared (std::cout,std::cerr,num_prtls,boxlength,boxlength_sqrt,ncells,cell_index,cell_list,prtl_positions) \
-    shared(rng,grid_ddims,numCellsDirect,numCellsDirect1D,r_cutoff_sqrt_scaled,upot_shifted,U_LRC) \
+    shared(rng_threads,grid_ddims,numCellsDirect,numCellsDirect1D,r_cutoff_sqrt_scaled,upot_shifted,U_LRC) \
     reduction(+ : mu_step,num_test_step)
     {
         mu_step = 0.;
@@ -404,7 +404,8 @@ void calcChemicalPotential() {
 
             // Random position of test particle
             for (short d = 0; d < nDims; ++d) {
-                Q0_testPrtl[d] = 0.98 * random_num(rng) + 0.01;  // Position between 0.99 and 0.01 to prevent errors at boundaries
+                // Position between 0.01 and 0.99 to prevent errors at boundaries
+                Q0_testPrtl[d] = 0.98 * random_num(rng_threads[omp_get_thread_num()]) + 0.01;
             }
 
             // Get index of cell where test particle would be
@@ -421,11 +422,11 @@ void calcChemicalPotential() {
                 ic_testPrtl += i_dim_testPrtl[d] * grid_index;
             }
 #if (DEBUG_OUT)
-            std::cout << "Test particle " << i_test << " at ";
+            std::cout << "Insert test particle " << i_test << " at ";
             for (short d = 0; d < nDims; ++d) {
                 std::cout << Q0_testPrtl[d] << " ";
             }
-            std::cout << "; index: " << ic_testPrtl << std::endl;
+            std::cout << "; cell_index: " << ic_testPrtl << std::endl;
 #endif
             if (ic_testPrtl < 0) {
                 std::cerr << "ERROR: ChemPot sampling: bad_ic (too small) " << ic_testPrtl << " < 0 for particle at ";
@@ -602,6 +603,7 @@ void initFiles() {
         resultFile << "Ensemble: NVE" << std::endl;
     }
     resultFile << "Start of Simulation: " << std::ctime(&now) << std::endl;
+    resultFile << "NumThreads:    " << omp_get_max_threads() << std::endl;
     resultFile << "Dimensions:    " << nDims << std::endl;
 #if (LJTS)
     resultFile << "Fluid:         LJTS" << std::endl;
@@ -648,6 +650,7 @@ void scaleVelocity() {
 
 // Assignment of the initial velocities according to the temperature
 void assignVelocity() {
+    const int num_thread = omp_get_thread_num();
     double temperature_avg = std::sqrt(nDims * temperature) / boxlength;
     double r[nDims] = {0.};
     double r_sqrd = 0.0;
@@ -655,7 +658,8 @@ void assignVelocity() {
 
     for (int i = 0; i < num_prtls; ++i) {
         for (short d = 0; d < nDims; ++d) {
-            r[d] = 2. * random_num(rng) - 1.;
+            // Random value between -1 and 1
+            r[d] = 2. * random_num(rng_threads[num_thread]) - 1.;
         }
         r_sqrd = 0.0;
         for (short d = 0; d < nDims; ++d) {
@@ -943,11 +947,17 @@ void finalizeSimulation() {
 
 int main() {
     time_t time_start = std::time(0);
-    // Random seed for random number generation; this allows simulations to be replicated exactly
-    //rng.seed(static_cast<unsigned int>(time_start));
-    rng.seed(123);
+    const int nthreads = omp_get_max_threads();
 
-    std::cout << "Start of simulation (MD) with " << omp_get_max_threads() << " threads" << std::endl;
+    // Seed for random number generation; this allows simulations to be replicated exactly
+    for (int t = 0; t < nthreads; ++t) {
+        std::mt19937 rng_thread;
+        // rng_thread.seed(static_cast<unsigned int>(time_start) + t);
+        rng_thread.seed(123 + t);
+        rng_threads.push_back(rng_thread);
+    }
+
+    std::cout << "Start of simulation (MD) with " << nthreads << " threads" << std::endl;
     std::cout << "Dimensions: " << nDims << std::endl;
 
     // Calculation of the long-range corrections
@@ -1071,7 +1081,7 @@ int main() {
     time_t time_end = std::time(0);
     double runtime_hours = std::difftime(time_end, time_start) / 3600.;
 
-    std::cout << "End of simulation (MD) after " << std::setprecision(4) << runtime_hours << " hours ( " << runtime_hours * omp_get_max_threads() << " core-hours )" << std::endl;
+    std::cout << "End of simulation (MD) after " << std::setprecision(4) << runtime_hours << " hours ( " << runtime_hours * nthreads << " core-hours )" << std::endl;
 
     return EXIT_SUCCESS;  // Success
 }
