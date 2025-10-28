@@ -4,7 +4,7 @@ Simple molecular dynamics (MD) program to run simulations with the classical Len
 
 Derivatives of the Helmholtz energy (according to Lustig) are sampled during the simulation as well as the radial pair distribution function (RDF). Additionally, the chemical potential is calculated using Widom's insertion method.
 
-The program is parallelized with OpenMP.
+The program is parallelized with OpenMP and utilizes Linked Cells/Cell Lists. It heavily depends on the compiler optimizations and, thus, uses `constexpr` extensively.
 
 The software can only conduct simulations with single-site particles. The restriction to the potential parameters $\sigma=1$, $\epsilon/k_B=1$ and $m=1$ plays a minor role since results for values other than 1.0 can be obtained by a dimensional analysis (see script `convert_units.py`). When running with the full LJ potential, long-range corrections are utilized but only valid for up to five dimensions.
 
