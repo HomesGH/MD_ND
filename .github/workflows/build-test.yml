@@ -1,0 +1,34 @@
+name: C++ Build-Test for MD_ND
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential g++-14 make
+      
+    - name: Build MD_ND
+      run: |
+        g++ --version
+        echo "Building MD_ND using makefile..."
+        make
+
+    - name: Verify executable was built
+      run: |
+        if [ ! -f ./MD_ND ]; then
+          echo "Build failed: Executable (MD_ND) not found."
+          exit 1
+        fi
+        echo "Build succeeded: Executable (MD_ND) created."
