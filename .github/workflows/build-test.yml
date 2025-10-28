@@ -1,4 +1,4 @@
-name: C++ Build-Test for MD_ND
+name: C++ Build-Test
 
 on:
   push:
