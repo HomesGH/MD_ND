@@ -6,7 +6,7 @@ Derivatives of the Helmholtz energy (according to Lustig) are sampled during the
 
 The program is parallelized with OpenMP.
 
-The software can only conduct simulations with single-site particles. The restriction to the potential parameters $\sigma=1$, $\epsilon/k_B=1$ and $m=1$ plays a minor role since results for values other than 1.0 can be obtained by a dimensional analysis (see script `convertSI_units.py`). When running with the full LJ potential, long-range corrections are utilized but only valid for up to five dimensions.
+The software can only conduct simulations with single-site particles. The restriction to the potential parameters $\sigma=1$, $\epsilon/k_B=1$ and $m=1$ plays a minor role since results for values other than 1.0 can be obtained by a dimensional analysis (see script `convert_units.py`). When running with the full LJ potential, long-range corrections are utilized but only valid for up to five dimensions.
 
 
 ### build
@@ -39,7 +39,7 @@ The simulation errors must be calculated in the post-processing, e.g., based on 
 
 Further thermodynamic properties including their errors can be determined using the script `calcThermoProperties.py`.
 
-All quantities are given in reduced units (length parameter: 1 Angström; energy parameter: 1 K*k_B; mass parameter: 1 u). They can be converted to SI units using `convertSI_units.py`. The reference units might be changed to the potential parameters of , e.g., Argon if needed.
+All quantities are given in reduced units (length parameter: 1 Angström; energy parameter: 1 K*k_B; mass parameter: 1 u). They can be converted to SI units using `convert_units.py`. The reference units might be changed to the potential parameters of , e.g., Argon if needed.
 
 
 ### validation
