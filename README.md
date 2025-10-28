@@ -45,6 +45,7 @@ All quantities are given in reduced units (length parameter: 1 Angström; energy
 ### validation
 
 The simulation program was validated by comparing its results to the following literature data/software:
+
 LJfull:
 - 1D: [10.1063/1.458172](https://doi.org/10.1063/1.458172)
 - 2D: [10.1139/p86-125](https://doi.org/10.1139/p86-125)
