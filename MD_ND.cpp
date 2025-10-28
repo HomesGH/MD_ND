@@ -32,10 +32,10 @@
 #define DEBUG_OUT false  // Debug output
 
 
-constexpr short nDims = 3;  // Dimension
+constexpr short nDims = 4;  // Dimension
 
 // State variables
-constexpr double temperature = 2.0;  // Reduced temperature
+constexpr double temperature = 3.7;  // Reduced temperature
 constexpr double density = 0.1;      // Reduced density
 
 // Cutoff limit
@@ -68,7 +68,7 @@ const std::string filename_vis = "trajectory.vis";           // Name of the visu
 const std::string filename_RDF = "RDF.dat";                  // Name of the file with the radial distribution function (RDF)
 
 // File header string
-constexpr short file_columnwidth = 10;
+constexpr short file_columnwidth = 13;
 inline std::string make_result_fileheader() {
     std::vector<std::string> headers = {"simstep", "temperature", "density", "pressure", "dUdV", "epot", "ekin", "etotal", "mu_res", "numTestMu",
                                         "A00r",    "A10r",        "A01r",    "A20r",     "A11r", "A02r", "A30r", "A21r",   "A12r"};
@@ -92,13 +92,14 @@ constexpr double upot_shifted = std::pow((1. / r_cutoff), 12) - std::pow((1. / r
 constexpr double upot_shifted = 0.0;
 #endif
 
-// Sampling
-// Bulk: Averaged over whole simulation
+// Long-range corrections (LRC)
 double U_LRC = 0.0;       // Long-range correction of potential energy
 double p_LRC = 0.0;       // Long-range correction of pressure
 double dUdV_LRC = 0.0;    // Long-range correction dUdV_LRC
 double d2UdV2_LRC = 0.0;  // Long-range correction d2UdV2_LRC
 
+// Sampling
+// Bulk: Averaged over whole simulation
 double U_accum = 0.0;      // Accumulated (over timesteps) potential energy of all particles
 double p_accum = 0.0;      // Accumulated pressure
 double ekin_accum = 0.0;   // Accumulated kinetic energy
@@ -119,7 +120,6 @@ double U_d2UdV_2_accum = 0.0;
 // Chem. pot. sampling
 double mu_accum = 0.0;  // Accumulated chemical potential
 double mu_step = 0.0;   // Chemical potential in current simstep
-
 unsigned long long num_test_accum = 0;  // Accumulated number of actual test particles for chem. pot. sampling
 int num_test_step = 0;                  // Number of actual test particles in current simstep
 
@@ -602,9 +602,10 @@ void initFiles() {
         resultFile << "Ensemble: NVE" << std::endl;
     }
     resultFile << "Start of Simulation: " << std::ctime(&now) << std::endl;
-    resultFile << "Dimension:     " << nDims << std::endl;
+    resultFile << "Dimensions:    " << nDims << std::endl;
 #if (LJTS)
     resultFile << "Fluid:         LJTS" << std::endl;
+    resultFile << "U_Shift:       " << std::scientific << std::setprecision(6) << upot_shifted << std::endl;
 #else
     resultFile << "Fluid:         LJfull" << std::endl;
 #endif
@@ -824,7 +825,7 @@ void getStateValues(const int step) {
 
         auto format_helper = [&](auto val) {
             std::ostringstream oss;
-            oss << std::fixed << std::setw(file_columnwidth) << std::setprecision(6) << val << " ";
+            oss << std::scientific << std::setw(file_columnwidth) << std::setprecision(6) << val << " ";
             return oss.str();
         };
         
@@ -947,6 +948,7 @@ int main() {
     rng.seed(123);
 
     std::cout << "Start of simulation (MD) with " << omp_get_max_threads() << " threads" << std::endl;
+    std::cout << "Dimensions: " << nDims << std::endl;
 
     // Calculation of the long-range corrections
     calcCutoffCorrections();
@@ -978,8 +980,8 @@ int main() {
     std::cout << "Number of cells in one direction: " << grid_n_part << std::endl;
     std::cout << "Number of neighbor cells in one direction: " << numCellsDirect1D << std::endl;
     std::cout << "Normalized width of one cell: " << grid_ddims << std::endl;
-    std::cout << "ncells: " << ncells << std::endl;
-    std::cout << "avg mols/cell " << static_cast<float>(num_prtls) / ncells << std::endl;
+    std::cout << "Total number of cells: " << ncells << std::endl;
+    std::cout << "Avg mols/cell " << static_cast<float>(num_prtls) / ncells << std::endl;
 
     if (grid_n_part <= 1) {
         std::cerr << "ERROR: At least 2 cells in each direction are required!" << std::endl;
@@ -1012,7 +1014,6 @@ int main() {
 
     writeVis();
 
-    std::cout << "Calculating initial forces..." << std::endl;
     calcPotForceLJ();
 
     if (flg_equi) {
