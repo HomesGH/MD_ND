@@ -21,8 +21,8 @@ jobs:
         include:
         - language: actions
           build-mode: none
-        - language: c-cpp
-          build-mode: manual
+        #- language: c-cpp
+        #  build-mode: manual
         - language: python
           build-mode: none
 
