@@ -15,14 +15,18 @@ The program requires C++26 or later due to the use of `constexpr` for cmath func
 
 Run make command to build
 
-<code>make</code>
+```bash
+make
+```
 
 
 ### run
 
 Run simulation with
 
-<code>OMP_NUM_THREADS=8 ./MD_ND</code>
+```bash
+OMP_NUM_THREADS=8 ./MD_ND
+```
 
 You might set any other number of OpenMP threads.
 
