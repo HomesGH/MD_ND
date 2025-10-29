@@ -22,7 +22,7 @@ jobs:
         - language: actions
           build-mode: none
         - language: c-cpp
-          build-mode: manual
+          build-mode: autobuild  # manual
         - language: python
           build-mode: none
 
@@ -48,7 +48,7 @@ jobs:
         sudo update-alternatives --set g++ /usr/bin/g++-14
         echo "Using compiler:"
         g++ --version
-        echo "Building MD_ND using makefile..."
+        echo "Building MD_ND..."
         g++ -std=c++26 -O3 -march=native -fopenmp -c MD_ND.cpp
         echo "Show directory content to see if MD_ND was built"
         ls
