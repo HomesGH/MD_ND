@@ -22,7 +22,7 @@ jobs:
         - language: actions
           build-mode: none
         - language: c-cpp
-          build-mode: autobuild  # manual
+          build-mode: autobuild
         - language: python
           build-mode: none
 
@@ -37,21 +37,19 @@ jobs:
         build-mode: ${{ matrix.build-mode }}
         queries: security-and-quality
 
-    - name: Install dependencies and build
-      if: matrix.build-mode == 'manual'
-      shell: bash
+    - name: Install dependencies and build (C/C++)
+      if: matrix.language == 'c-cpp'
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential g++-14 make
-        # Use g++-14 when calling g++
+        sudo apt-get install -y g++-14 build-essential
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
         sudo update-alternatives --set g++ /usr/bin/g++-14
         echo "Using compiler:"
         g++ --version
-        echo "Building MD_ND..."
-        g++ -std=c++26 -O3 -march=native -fopenmp -c MD_ND.cpp
-        echo "Show directory content to see if MD_ND was built"
-        ls
+    
+    - name: Autobuild (C/C++)
+      if: matrix.build-mode == 'autobuild'
+      uses: github/codeql-action/autobuild@v4
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
