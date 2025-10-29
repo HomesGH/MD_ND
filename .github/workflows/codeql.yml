@@ -21,8 +21,8 @@ jobs:
         include:
         - language: actions
           build-mode: none
-        #- language: c-cpp
-        #  build-mode: manual
+        - language: c-cpp
+          build-mode: manual
         - language: python
           build-mode: none
 
@@ -49,7 +49,7 @@ jobs:
         echo "Using compiler:"
         g++ --version
         echo "Building MD_ND using makefile..."
-        make
+        g++ -std=c++26 -O3 -march=native -fopenmp -c MD_ND.cpp
         echo "Show directory content to see if MD_ND was built"
         ls
 
